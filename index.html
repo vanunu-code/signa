@@ -122,8 +122,10 @@
         </div>
         <h3><i class="fas fa-user"></i> שם ומשפחה</h3>
         <input type="text" class="form-input" id="full-name" placeholder="שם מלא...">
+        <h3><i class="fas fa-id-card"></i> תעודת זהות</h3>
+        <input type="number" class="form-input" id="num" placeholder="מספר זהות...">
         <h3><i class="fas fa-pen"></i> החותמת האישית שלי</h3>
-        <input type="text" class="form-input" id="my_signature" placeholder="מלא/י את חותמך האישי...">
+        <input type="text" class="form-input" id="my_signature" placeholder="משפט המלווה אותך בחיים/בתפקיד...">
         <div class="checkbox-container">
             <label for="join-database" style="text-align: right;">
                 <i class="fas fa-database" style="padding: 5px;"></i>
@@ -143,6 +145,7 @@
             <thead>
                 <tr>
                     <th>שם ומשפחה</th>
+                    <th>מספר זהות</th>
                     <th>חותמת אישית</th>
                     <th>נופשון הקלה</th>
                 </tr>
@@ -163,10 +166,10 @@
         // הוסף אירוע ללחיצה על כפתור השמירה
 saveButton.addEventListener('click', function () {
     const dataUrl = signaturePad.toDataURL();
-    const fullName = document.getElementById('full-name').value;
+    const num = document.getElementById('num').value;
     
     // שמירת התמונה לתיקיית הקבצים במכשיר (התיקייה הבאה מסמלת את תיקיית המסמכים ב-iPad)
-    saveImageToDevice(dataUrl, fullName + '_Va.png');
+    saveImageToDevice(dataUrl, num + '_Va.png');
 });
 
 // פונקציה לשמירת התמונה בתיקיית הקבצים במכשיר
@@ -241,26 +244,30 @@ function saveImageToDevice(dataUrl, filename) {
             }
     
             var fullName = document.getElementById('full-name').value;
+            var num = document.getElementById('num').value;
             var mySignature = document.getElementById('my_signature').value;
             var joinDatabaseCheckbox = document.getElementById('join-database');
             var joinDatabaseValue = joinDatabaseCheckbox.checked ? 'כן' : 'לא';
     
-            if (fullName.trim() === "" || mySignature.trim() === "") {
-                return alert("אנא הזן שם, משפחה וחותמת אישית.");
+            if (fullName.trim() === "" || mySignature.trim() === "" || num.trim() === "") {
+                return alert("אנא הזן שם ומשפחה, תעודת זהות וחותמת אישית.");
             }
     
             var newRow = namesTableBody.insertRow(0);
             var nameCell = newRow.insertCell();
+            var numCell = newRow.insertCell();
             var signatureCell = newRow.insertCell();
             var joinDatabaseCell = newRow.insertCell();
     
             nameCell.textContent = fullName;
+            numCell.textContent = num;
             signatureCell.textContent = mySignature;
             joinDatabaseCell.textContent = joinDatabaseValue;
 
              joinDatabaseCheckbox.checked = false;
         
             document.getElementById('full-name').value = "";
+            document.getElementById('num').value = "";
             document.getElementById('my_signature').value = "";
             signaturePad.clear();
         });
@@ -274,7 +281,7 @@ function saveImageToDevice(dataUrl, filename) {
 function exportDataToExcel() {
     var table = document.getElementById('names-table-body');
     var rows = Array.from(table.getElementsByTagName('tr'));
-    var data = [['שם ומשפחה', 'חותמת אישית', 'נופשון הקלה']];
+    var data = [['שם ומשפחה','תעודת זהות', 'חותמת אישית', 'נופשון הקלה']];
     
     if (table.children.length === 0) {
         return;
@@ -282,10 +289,11 @@ function exportDataToExcel() {
     
     rows.forEach(function (row) {
         var nameCell = row.querySelector('td:nth-child(1)');
-        var signatureCell = row.querySelector('td:nth-child(2)');
-        var joinDatabaseCell = row.querySelector('td:nth-child(3)');
+        var numCell = row.querySelector('td:nth-child(2)');
+        var signatureCell = row.querySelector('td:nth-child(3)');
+        var joinDatabaseCell = row.querySelector('td:nth-child(4)');
         var joinDatabaseValue = joinDatabaseCell.textContent;
-        data.push([nameCell.textContent, signatureCell.textContent, joinDatabaseValue]);
+        data.push([nameCell.textContent, numCell.textContent, signatureCell.textContent, joinDatabaseValue]);
     });
 
     var ws = XLSX.utils.aoa_to_sheet(data);
@@ -319,10 +327,12 @@ window.addEventListener('beforeunload', function () {
         // Load and save data to local storage
         window.onbeforeunload = function () {
             var fullName = document.getElementById('full-name').value;
+            var num = document.getElementById('num').value;
             var mySignature = document.getElementById('my_signature').value;
             var joinDatabase = document.getElementById('join-database').checked;
     
             localStorage.setItem('full_name', fullName);
+            localStorage.setItem('num', num);
             localStorage.setItem('my_signature', mySignature);
             localStorage.setItem('join_database', joinDatabase);
     
@@ -339,11 +349,16 @@ window.addEventListener('beforeunload', function () {
     
         window.addEventListener('DOMContentLoaded', function () {
             var fullName = localStorage.getItem('full_name');
+            var num = localStorage.getItem('num');
             var mySignature = localStorage.getItem('my_signature');
             var joinDatabase = localStorage.getItem('join_database');
     
             if (fullName) {
                 document.getElementById('full-name').value = fullName;
+            }
+
+            if (num) {
+                document.getElementById('num').value = num;
             }
     
             if (mySignature) {
@@ -360,11 +375,13 @@ window.addEventListener('beforeunload', function () {
                 tableData.forEach(function (rowData) {
                     var newRow = tableBody.insertRow();
                     var nameCell = newRow.insertCell(0);
-                    var signatureCell = newRow.insertCell(1);
-                    var joinDatabaseCell = newRow.insertCell(2);
+                    var numCell = newRow.insertCell(1);
+                    var signatureCell = newRow.insertCell(2);
+                    var joinDatabaseCell = newRow.insertCell(3);
                     nameCell.textContent = rowData[0];
-                    signatureCell.textContent = rowData[1];
-                    joinDatabaseCell.textContent = rowData[2];
+                    numCell.textContent = rowData[1];
+                    signatureCell.textContent = rowData[2];
+                    joinDatabaseCell.textContent = rowData[3];
                 });
             }
         });
